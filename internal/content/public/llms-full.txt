@@ -1,0 +1,58 @@
+# iFaceMatch — Referência completa legível por IA
+
+Atualização: 2026-11-06
+Idioma: português brasileiro.
+URL principal: https://docs.ifacematch.com/docs.html
+Markdown canônico: https://docs.ifacematch.com/docs.md
+
+## 1. Visão geral
+
+iFaceMatch é um sistema Customer Hosted de biometria facial com prova de vida. A API roda na instalação autorizada da organização. O Portal/Central controlam o licenciamento e a distribuição, não as decisões faciais. A integração é servidor a servidor, com captura realizada pelo SDK Web via link temporário. A verificação de identidade é 1:1 e depende de uma referência de pessoa previamente cadastrada. Não é identificação 1:N.
+
+## 2. Credenciais
+
+O backend do integrador armazena a chave de aplicação (arquivo 0600 ou serviço de segredos) e envia Authorization: Bearer <application-key> à API da instalação. O navegador nunca recebe a chave, apenas a URL temporária fornecida pelo backend.
+
+## 3. API REST
+
+POST /v1/liveness/checks, body {}; GET /v1/liveness/checks/{checkId}. Prova de vida isolada: não exige subjectId e não registra pessoa.
+
+POST /v1/enrollments, body {"subjectId":"person_123"}; GET /v1/enrollments/{checkId}. Cadastro de referência biométrica vinculada ao sujeito autorizado.
+
+POST /v1/verifications, body {"subjectId":"person_123"}; GET /v1/verifications/{checkId}. Comparação facial 1:1 com a referência de um sujeito.
+
+POST bem-sucedido retorna HTTP 201 com id e verificationUrl, HTTPS e /verify.html#identity=<temporary-token>. O Server fornece o resultado oficial consultado por GET; emissão e HTTP 201 não são decisão biométrica.
+
+## 4. SDK Web
+
+O SDK Web é servido no domínio autorizado do próprio Server, incluindo /verify.html. O navegador abre a verificationUrl efêmera. O backend consulta e armazena apenas os dados necessários à finalidade. O exemplo disponível em /example-backend.go demonstra a emissão e consulta, enquanto /example.js e /example.html ilustram a experiência local de captura.
+
+## 5. Similaridade
+
+O Console 0.1.4 contém formulário administrativo por aplicação. O valor 0 significa herdar o score global do Server. Valor personalizado permitido: entre o mínimo atual do Server e 0.65. Requer administrador, MFA recente, CSRF, confirmação explícita e operação auditada. A API interna correspondente não é pública. Score técnico não é probabilidade calibrada; liveness continua independente. O fluxo funcional de gravação ainda requer validação em navegador por operador com dados de teste autorizados.
+
+## 6. Instalação
+
+Ubuntu Server 24.04 amd64 com systemd; PostgreSQL 16; DNS e certificado HTTPS; proxy reverso ou servidor dedicado. Usar somente release assinada autorizada para a instalação. O Portal ainda não oferece download público comercial da release 0.1.7.
+
+## 7. Releases
+
+0.1.7: pacote Ubuntu 24.04 amd64 assinado, 69 arquivos, SHA-256 65358027c374a794f9a0201df229469da49e0b844a59486303e27df1a434b9a5. Somente Console mudou 0.1.3 -> 0.1.4; Server 0.1.6 preservado; piloto Rododata em 2026-11-05.
+0.1.6: pacote assinado, SHA-256 608197ec0bf762efc061c2dd6a9b047c293932c37a2b4df507a65915c9278c16. Server 0.1.6 instalado no piloto em 2026-11-04.
+Autoridade Ed25519: ifm_distribution_prod_v1. A existência de um pacote assinado não implica licença de redistribuição ou aprovação comercial.
+
+## 8. Upgrade
+
+Antes: checar autorização, assinatura, SHA, compatibilidade, processos e backups. Instalar em paralelo e atualizar somente serviços necessários. Após: testar HTTP privado, HTTPS público, MFA e funções biométricas permitidas. Em caso de falha, restaurar o release anterior após validar backups e estado. Rollback real em systemd ainda precisa de ensaio em VM isolada. Não executar upgrade --latest: esta interface não foi implementada.
+
+## 9. URLs de referência
+
+https://docs.ifacematch.com/docs.html
+https://docs.ifacematch.com/docs-api.html
+https://docs.ifacematch.com/docs-sdk.html
+https://docs.ifacematch.com/docs-install.html
+https://docs.ifacematch.com/releases.html
+https://docs.ifacematch.com/upgrade-guide.html
+https://docs.ifacematch.com/docs.md
+
+Nenhuma chave, credencial, token real, imagem facial, CPF ou embedding faz parte desta documentação.

@@ -1,0 +1,19 @@
+<nav class="breadcrumb" aria-label="Caminho"><a href="/docs.html">Docs</a><span>/</span>SDK Web e captura facial</nav><span class="eyebrow">Integração / SDK Web</span><h1>SDK Web e captura facial</h1><p class="lead">O SDK conduz a captura e a prova de vida. Sua aplicação controla a sessão no backend e recebe do iFaceMatch um endereço temporário seguro para o navegador.</p><section class="doc-section" id="architecture"><h2>Divisão de responsabilidades</h2><div class="table-wrap"><table><thead><tr><th>Componente</th><th>Responsabilidade</th></tr></thead><tbody><tr><td>Backend do integrador</td><td>Guarda a chave da aplicação, emite operações e consulta decisões.</td></tr><tr><td>Navegador e SDK Web</td><td>Solicita câmera e executa a jornada de captura pelo endereço temporário.</td></tr><tr><td>iFaceMatch Server</td><td>Aplica autorizações, biometria 1:1, liveness e emite resultados.</td></tr></tbody></table></div></section><section class="doc-section" id="browser"><h2>Iniciar captura no navegador</h2><p>O backend deve validar a chamada do usuário, iniciar uma operação no Server e devolver somente a <code>verificationUrl</code> emitida.</p><div class="code-shell"><div class="code-header"><span class="code-label">JavaScript · frontend da aplicação</span><button type="button" class="code-copy" data-copy-code aria-label="Copiar exemplo de código">Copiar</button></div><pre><code class="language-javascript">async function startVerification(subjectId) {
+  const response = await fetch(&quot;/api/identity/start&quot;, {
+    method: &quot;POST&quot;,
+    headers: {
+      &quot;Content-Type&quot;: &quot;application/json&quot;
+    },
+    body: JSON.stringify({
+      flow: &quot;verify&quot;,
+      subjectId
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(&quot;Unable to start verification&quot;);
+  }
+
+  const result = await response.json();
+  window.location.assign(result.verificationUrl);
+}</code></pre></div><p>O exemplo utiliza uma rota própria do integrador. O pacote instalado serve a página <code>/verify.html</code> e os arquivos versionados do SDK no mesmo domínio da API.</p></section><section class="doc-section" id="result"><h2>Consultar o resultado</h2><p>A conclusão visual do fluxo no navegador não equivale à aprovação biométrica. Consulte <code>GET /v1/verifications/{checkId}</code> pelo backend e aplique a decisão fornecida pelo Server.</p><div class="note warning"><strong>Não colocar credenciais no SDK</strong><p>Nunca passe a chave da aplicação como parâmetro de URL, variável global, localStorage ou cabeçalho de requisição originada pelo navegador.</p></div></section><section class="doc-section" id="examples"><h2>Exemplos disponíveis</h2><div class="link-grid"><a class="link-card" href="/example-backend.go"><strong>Backend Go</strong><span>Emissão e consulta com credencial em arquivo local.</span></a><a class="link-card" href="/example.html"><strong>Exemplo HTML</strong><span>Jornada demonstrativa usando um backend local.</span></a><a class="link-card" href="/example.js"><strong>JavaScript do exemplo</strong><span>Requisições ao backend, sem segredo na página.</span></a><a class="link-card" href="/docs-api.html"><strong>API REST</strong><span>Rotas de prova de vida, cadastro e verificação.</span></a></div></section><footer class="doc-footer">iFaceMatch · Documentação de integração Customer Hosted · <a href="/docs.md">Versão Markdown</a> · <a href="/llms.txt">Índice para IAs</a></footer>

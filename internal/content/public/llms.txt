@@ -1,0 +1,23 @@
+# iFaceMatch — Developer Documentation
+
+> Documentação pública de integração iFaceMatch Customer Hosted. Idioma: pt-BR.
+> Não há acesso a segredos, cadastros, dados biométricos ou endpoints internos de administração por este índice.
+
+## Referências principais
+
+- [Visão geral e início rápido](https://docs.ifacematch.com/docs.html): fluxo de integração e segurança das chaves
+- [API REST](https://docs.ifacematch.com/docs-api.html): prova de vida, cadastro e verificação facial 1:1
+- [SDK Web](https://docs.ifacematch.com/docs-sdk.html): token temporário e captura no navegador
+- [Instalação](https://docs.ifacematch.com/docs-install.html): Ubuntu 24.04, HTTPS e perfis Customer Hosted
+- [Releases](https://docs.ifacematch.com/releases.html): pacotes 0.1.6 e 0.1.7 e respectivos status
+- [Guia de upgrade](https://docs.ifacematch.com/upgrade-guide.html): assinatura, preflight, backup e rollback
+- [Documentação Markdown completa](https://docs.ifacematch.com/llms-full.txt): texto preparado para agentes
+- [Resumo técnico Markdown](https://docs.ifacematch.com/docs.md): endpoints e exemplos de integração
+
+## Limites importantes
+
+- iFaceMatch fornece verificação facial 1:1, não busca facial 1:N.
+- Prova de vida não é equivalente à confirmação de identidade.
+- Chaves de aplicação pertencem exclusivamente ao backend da empresa.
+- A release 0.1.7 foi implantada em piloto privado; não está publicada para download comercial geral.
+- APIs do Console usadas por operadores são privadas e não devem ser tratadas como endpoints públicos do SDK.

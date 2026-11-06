@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<title>iFaceMatch · Exemplo de verificação</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#162333;background:#f6f8fa}
+main{width:min(640px,calc(100% - 32px));margin:7vh auto;padding:30px;background:#fff;border:1px solid #d7dfe6}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.1}p{line-height:1.6;color:#576676}
+label{display:block;font-weight:700;font-size:14px;margin:24px 0 9px}
+input{width:100%;font:inherit;padding:12px;box-sizing:border-box;border:1px solid #a5b2be}
+select{width:100%;padding:12px;border:1px solid #a5b2be;font:inherit} button{padding:12px 20px;margin-top:18px;color:#fff;background:#153d70;border:0;font:inherit;font-weight:700}button:disabled{opacity:.5;cursor:not-allowed}#check-status{font-weight:600}
+#error{color:#a32323}
+</style>
+</head>
+<body>
+<main>
+<p>iFaceMatch · Exemplo de integração</p>
+<h1>Teste a prova de vida e a biometria facial</h1>
+<p>Seu backend deve criar a verificação na API iFaceMatch e entregar a URL de uso único ao navegador. Nenhuma chave de API é colocada nesta página.</p>
+<h2>1. Iniciar pelo backend de exemplo</h2>
+<p>Execute o backend Go em <code>http://127.0.0.1:8099/</code> com a chave de aplicação guardada em arquivo privado. O backend emite a URL e a página abre a captura automaticamente.</p>
+<form id="issue-form">
+<label for="flow">Operação biométrica</label>
+<select id="flow" required>
+  <option value="liveness">Prova de vida (sem cadastro)</option>
+  <option value="enroll">Cadastrar rosto (Enrollment)</option>
+  <option value="verify">Verificar rosto 1:1</option>
+</select>
+<label for="subject-id">Identificador do usuário</label>
+<input id="subject-id" type="text" value="usuario_001" minlength="3" maxlength="64" pattern="[A-Za-z0-9_-]{3,64}" autocomplete="off" required>
+<button type="submit">Iniciar biometria</button>
+</form>
+<h2>2. Ou abrir um link já emitido</h2>
+<form id="verification-form">
+<label for="verification-url">URL temporária de verificação</label>
+<input id="verification-url" type="url" placeholder="https://seu-dominio/verify.html#identity=..." autocomplete="off" required>
+<button type="submit">Abrir verificação</button>
+</form>
+<h2>3. Consultar o resultado real</h2>
+<p>Após concluir a captura em outra aba ou retornar a esta página, consulte o último check iniciado. A consulta usa a chave exclusivamente no backend Go e mostra a decisão registrada pelo Server.</p>
+<button id="status-button" type="button" disabled>Consultar último resultado</button>
+<p id="check-status" role="status" aria-live="polite">Nenhuma captura iniciada nesta sessão.</p>
+<p id="error" role="alert" aria-live="polite"></p>
+<p>Na opção <strong>Prova de vida</strong>, nenhum identificador facial é cadastrado: o Server decide somente a autenticidade da captura. Para <strong>Verificar rosto 1:1</strong>, primeiro cadastre o mesmo identificador. O SDK instalado no seu servidor atende a página <code>verify.html</code>, controla a câmera e envia os frames ao Server, que toma a decisão. A decisão biométrica continua sendo do Server. O exemplo Go gera somente a sessão autorizada; não simula prova de vida.</p>
+</main>
+<script defer src="/example.js"></script>
+</body></html>
