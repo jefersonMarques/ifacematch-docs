@@ -2,7 +2,7 @@
 
 Atualização: 2026-11-06
 Idioma: português brasileiro.
-URL principal: https://docs.ifacematch.com/docs.html
+URL principal: https://docs.ifacematch.com/
 Markdown canônico: https://docs.ifacematch.com/docs.md
 
 ## 1. Visão geral
@@ -47,12 +47,12 @@ Antes: checar autorização, assinatura, SHA, compatibilidade, processos e backu
 
 ## 9. URLs de referência
 
-https://docs.ifacematch.com/docs.html
-https://docs.ifacematch.com/docs-api.html
-https://docs.ifacematch.com/docs-sdk.html
-https://docs.ifacematch.com/docs-install.html
-https://docs.ifacematch.com/releases.html
-https://docs.ifacematch.com/upgrade-guide.html
+https://docs.ifacematch.com/
+https://docs.ifacematch.com/api
+https://docs.ifacematch.com/sdk
+https://docs.ifacematch.com/installation
+https://docs.ifacematch.com/releases
+https://docs.ifacematch.com/upgrade
 https://docs.ifacematch.com/docs.md
 
 Nenhuma chave, credencial, token real, imagem facial, CPF ou embedding faz parte desta documentação.

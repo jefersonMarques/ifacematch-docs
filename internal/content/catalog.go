@@ -12,6 +12,7 @@ var embeddedFiles embed.FS
 
 type Page struct {
 	Path        string
+	SourceFile  string
 	Title       string
 	Description string
 	Body        string
@@ -26,32 +27,38 @@ type SearchResult struct {
 
 var catalog = []Page{
 	{
-		Path:        "/docs.html",
+		Path:        "/",
+		SourceFile:  "docs.html",
 		Title:       "Integração com iFaceMatch",
 		Description: "Integre biometria facial 1:1 e prova de vida via API REST e SDK Web, com exemplos de código e segurança de credenciais.",
 	},
 	{
-		Path:        "/docs-api.html",
+		Path:        "/api",
+		SourceFile:  "docs-api.html",
 		Title:       "Referência da API REST",
 		Description: "Contratos de prova de vida, cadastro facial e verificação 1:1 com exemplos de requisições e resultados.",
 	},
 	{
-		Path:        "/docs-sdk.html",
+		Path:        "/sdk",
+		SourceFile:  "docs-sdk.html",
 		Title:       "SDK Web e captura facial",
 		Description: "Integração do SDK Web iFaceMatch, captura segura no navegador e processamento no servidor do cliente.",
 	},
 	{
-		Path:        "/docs-install.html",
+		Path:        "/installation",
+		SourceFile:  "docs-install.html",
 		Title:       "Instalação Customer Hosted",
 		Description: "Pré-requisitos, instalação, diagnóstico e recuperação segura do iFaceMatch Customer Hosted.",
 	},
 	{
-		Path:        "/releases.html",
+		Path:        "/releases",
+		SourceFile:  "releases.html",
 		Title:       "Releases e histórico de versões",
 		Description: "Histórico de versões e compatibilidade dos componentes Server, Console, Secure Core e SDK Web.",
 	},
 	{
-		Path:        "/upgrade-guide.html",
+		Path:        "/upgrade",
+		SourceFile:  "upgrade-guide.html",
 		Title:       "Guia de upgrade e rollback",
 		Description: "Como verificar releases assinadas, preservar backups, aplicar upgrades e validar rollback.",
 	},
@@ -69,7 +76,7 @@ func Lookup(path string) (Page, bool, error) {
 			continue
 		}
 
-		filename := strings.TrimPrefix(path, "/")
+		filename := entry.SourceFile
 		body, err := embeddedFiles.ReadFile("pages/" + filename)
 		if err != nil {
 			return Page{}, true, fmt.Errorf("load page %s: %w", filename, err)
@@ -103,7 +110,7 @@ func Search(query string) []SearchResult {
 	for _, entry := range catalog {
 		searchable := strings.ToLower(entry.Title + " " + entry.Description)
 		if !strings.Contains(searchable, normalized) {
-			filename := strings.TrimPrefix(entry.Path, "/")
+			filename := entry.SourceFile
 			body, err := embeddedFiles.ReadFile("pages/" + filename)
 			if err != nil || !strings.Contains(strings.ToLower(string(body)), normalized) {
 				continue

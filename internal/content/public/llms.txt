@@ -5,12 +5,12 @@
 
 ## Referências principais
 
-- [Visão geral e início rápido](https://docs.ifacematch.com/docs.html): fluxo de integração e segurança das chaves
-- [API REST](https://docs.ifacematch.com/docs-api.html): prova de vida, cadastro e verificação facial 1:1
-- [SDK Web](https://docs.ifacematch.com/docs-sdk.html): token temporário e captura no navegador
-- [Instalação](https://docs.ifacematch.com/docs-install.html): Ubuntu 24.04, HTTPS e perfis Customer Hosted
-- [Releases](https://docs.ifacematch.com/releases.html): pacotes 0.1.6 e 0.1.7 e respectivos status
-- [Guia de upgrade](https://docs.ifacematch.com/upgrade-guide.html): assinatura, preflight, backup e rollback
+- [Visão geral e início rápido](https://docs.ifacematch.com/): fluxo de integração e segurança das chaves
+- [API REST](https://docs.ifacematch.com/api): prova de vida, cadastro e verificação facial 1:1
+- [SDK Web](https://docs.ifacematch.com/sdk): token temporário e captura no navegador
+- [Instalação](https://docs.ifacematch.com/installation): Ubuntu 24.04, HTTPS e perfis Customer Hosted
+- [Releases](https://docs.ifacematch.com/releases): pacotes 0.1.6 e 0.1.7 e respectivos status
+- [Guia de upgrade](https://docs.ifacematch.com/upgrade): assinatura, preflight, backup e rollback
 - [Documentação Markdown completa](https://docs.ifacematch.com/llms-full.txt): texto preparado para agentes
 - [Resumo técnico Markdown](https://docs.ifacematch.com/docs.md): endpoints e exemplos de integração
 

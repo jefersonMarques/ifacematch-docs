@@ -22,6 +22,21 @@ func TestEmbeddedPages(t *testing.T) {
 	}
 }
 
+func TestCanonicalCatalogPaths(t *testing.T) {
+	paths := []string{"/", "/api", "/sdk", "/installation", "/releases", "/upgrade"}
+	pages := Pages()
+
+	for index, expected := range paths {
+		if pages[index].Path != expected {
+			t.Errorf("page %d: expected %q, got %q", index, expected, pages[index].Path)
+		}
+
+		if pages[index].SourceFile == "" {
+			t.Errorf("page %d has no embedded source", index)
+		}
+	}
+}
+
 func TestSearch(t *testing.T) {
 	results := Search("verification")
 	if len(results) == 0 {

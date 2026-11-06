@@ -37,18 +37,19 @@ Páginas completas são geradas no servidor e indexáveis sem JavaScript. HTMX a
 
 | Rota | Função |
 | --- | --- |
-| `/` | Redireciona permanentemente para `/docs.html` |
-| `/docs.html` | Introdução e início rápido |
-| `/docs-api.html` | Endpoints REST |
-| `/docs-sdk.html` | SDK Web |
-| `/docs-install.html` | Instalação |
-| `/releases.html` | Histórico de versões |
-| `/upgrade-guide.html` | Upgrade e rollback |
+| `/` | Introdução e início rápido |
+| `/api` | Endpoints REST |
+| `/sdk` | SDK Web |
+| `/installation` | Instalação |
+| `/releases` | Histórico de versões |
+| `/upgrade` | Upgrade e rollback |
 | `/search?q=` | Busca SSR/HTMX |
 | `/openapi.json` | OpenAPI 3.1 |
 | `/llms.txt`, `/llms-full.txt`, `/docs.md` | Documentação legível por agentes |
 | `/robots.txt`, `/sitemap.xml` | Descoberta e indexação |
 | `/healthz` | Health check local |
+
+As URLs antigas com extensão `.html` recebem redirecionamento HTTP 301 para as rotas canônicas. As versões com barra final, como `/api/`, também redirecionam para `/api`. As consultas `/search` são marcadas como `noindex`.
 
 As rotas do Portal e da Central **não** são expostas neste serviço. O exemplo `/example.html` é entregue como código-fonte em texto, e não como fluxo biométrico executável.
 
@@ -57,8 +58,8 @@ As rotas do Portal e da Central **não** são expostas neste serviço. O exemplo
 O workflow `Documentation CI` valida cada Pull Request. O workflow `Signed-source binary release` roda somente quando uma tag semântica `vMAJOR.MINOR.PATCH` é enviada.
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.1.1
+git push origin v0.1.1
 ```
 
 A Release inclui somente:
