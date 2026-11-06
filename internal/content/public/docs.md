@@ -1,6 +1,6 @@
 # iFaceMatch — Documentação pública de integração
 
-Fonte canônica: https://docs.ifacematch.com/docs.html
+Fonte canônica: https://docs.ifacematch.com/
 Atualizado: 2026-11-06. Idioma: pt-BR.
 
 ## Arquitetura
@@ -60,8 +60,8 @@ Validar a autorização da release, SHA-256, assinatura, versões e compatibilid
 
 ## Referências
 
-- https://docs.ifacematch.com/docs-api.html
-- https://docs.ifacematch.com/docs-sdk.html
-- https://docs.ifacematch.com/docs-install.html
-- https://docs.ifacematch.com/releases.html
-- https://docs.ifacematch.com/upgrade-guide.html
+- https://docs.ifacematch.com/api
+- https://docs.ifacematch.com/sdk
+- https://docs.ifacematch.com/installation
+- https://docs.ifacematch.com/releases
+- https://docs.ifacematch.com/upgrade

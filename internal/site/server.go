@@ -17,31 +17,40 @@ var navigation = []views.Group{
 	{
 		Title: "Começar",
 		Links: []views.Link{
-			{Label: "Visão geral", URL: "/docs.html"},
-			{Label: "Início rápido", URL: "/docs.html#quickstart"},
-			{Label: "Instalação", URL: "/docs-install.html"},
-			{Label: "Autenticação", URL: "/docs.html#credentials"},
+			{Label: "Visão geral", URL: "/"},
+			{Label: "Início rápido", URL: "/#quickstart"},
+			{Label: "Instalação", URL: "/installation"},
+			{Label: "Autenticação", URL: "/#credentials"},
 		},
 	},
 	{
 		Title: "Integração",
 		Links: []views.Link{
-			{Label: "API REST", URL: "/docs-api.html"},
-			{Label: "Prova de vida", URL: "/docs-api.html#liveness"},
-			{Label: "Cadastro facial", URL: "/docs-api.html#enrollment"},
-			{Label: "Verificação 1:1", URL: "/docs-api.html#verification"},
-			{Label: "SDK Web", URL: "/docs-sdk.html"},
+			{Label: "API REST", URL: "/api"},
+			{Label: "Prova de vida", URL: "/api#liveness"},
+			{Label: "Cadastro facial", URL: "/api#enrollment"},
+			{Label: "Verificação 1:1", URL: "/api#verification"},
+			{Label: "SDK Web", URL: "/sdk"},
 		},
 	},
 	{
 		Title: "Operação",
 		Links: []views.Link{
-			{Label: "Releases", URL: "/releases.html"},
-			{Label: "Upgrade e rollback", URL: "/upgrade-guide.html"},
+			{Label: "Releases", URL: "/releases"},
+			{Label: "Upgrade e rollback", URL: "/upgrade"},
 			{Label: "Especificação OpenAPI", URL: "/openapi.json"},
 			{Label: "Documentação para IA", URL: "/llms.txt"},
 		},
 	},
+}
+
+var legacyPagePaths = map[string]string{
+	"/docs.html": "/",
+	"/docs-api.html": "/api",
+	"/docs-sdk.html": "/sdk",
+	"/docs-install.html": "/installation",
+	"/releases.html": "/releases",
+	"/upgrade-guide.html": "/upgrade",
 }
 
 var publicAssets = []string{
@@ -66,10 +75,6 @@ func NewHandler() http.Handler {
 	staticServer := http.FileServer(http.FS(staticFiles))
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /{$}", func(writer http.ResponseWriter, request *http.Request) {
-		http.Redirect(writer, request, "/docs.html", http.StatusPermanentRedirect)
-	})
-
 	mux.HandleFunc("GET /healthz", func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		writer.Header().Set("Cache-Control", "no-store")
@@ -78,7 +83,12 @@ func NewHandler() http.Handler {
 
 	for _, metadata := range content.Pages() {
 		pagePath := metadata.Path
-		mux.HandleFunc("GET "+pagePath, func(writer http.ResponseWriter, request *http.Request) {
+		routePattern := "GET " + pagePath
+		if pagePath == "/" {
+			routePattern = "GET /{$}"
+		}
+
+		mux.HandleFunc(routePattern, func(writer http.ResponseWriter, request *http.Request) {
 			page, found, err := content.Lookup(pagePath)
 			if err != nil {
 				log.Printf("documentation page unavailable: %v", err)
@@ -92,6 +102,18 @@ func NewHandler() http.Handler {
 
 			render(writer, request, views.DocumentPage(toViewPage(page), navigation))
 		})
+	}
+
+	for oldPath, canonicalPath := range legacyPagePaths {
+		mux.HandleFunc("GET "+oldPath, redirectToCanonical(canonicalPath))
+	}
+
+	for _, metadata := range content.Pages() {
+		if metadata.Path == "/" {
+			continue
+		}
+
+		mux.HandleFunc("GET "+metadata.Path+"/{$}", redirectToCanonical(metadata.Path))
 	}
 
 	mux.HandleFunc("GET /search", handleSearch)
@@ -120,6 +142,16 @@ func NewHandler() http.Handler {
 	}
 
 	return securityHeaders(mux)
+}
+
+func redirectToCanonical(target string) http.HandlerFunc {
+	return func(writer http.ResponseWriter, request *http.Request) {
+		destination := target
+		if request.URL.RawQuery != "" {
+			destination += "?" + request.URL.RawQuery
+		}
+		http.Redirect(writer, request, destination, http.StatusMovedPermanently)
+	}
 }
 
 func servePlainText(writer http.ResponseWriter, request *http.Request, files fs.FS, name string) {

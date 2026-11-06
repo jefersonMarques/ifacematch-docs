@@ -11,10 +11,12 @@ import (
 
 func request(t *testing.T, handler http.Handler, method, path string, headers map[string]string) *httptest.ResponseRecorder {
 	t.Helper()
+
 	req := httptest.NewRequest(method, path, nil)
 	for name, value := range headers {
 		req.Header.Set(name, value)
 	}
+
 	response := httptest.NewRecorder()
 	handler.ServeHTTP(response, req)
 	return response
@@ -23,44 +25,100 @@ func request(t *testing.T, handler http.Handler, method, path string, headers ma
 func TestDocumentationPages(t *testing.T) {
 	handler := NewHandler()
 	paths := []string{
-		"/docs.html",
-		"/docs-api.html",
-		"/docs-sdk.html",
-		"/docs-install.html",
-		"/releases.html",
-		"/upgrade-guide.html",
+		"/",
+		"/api",
+		"/sdk",
+		"/installation",
+		"/releases",
+		"/upgrade",
 	}
 
-	for _, path := range paths {
-		t.Run(path, func(t *testing.T) {
-			res := request(t, handler, http.MethodGet, path, nil)
-			if res.Code != http.StatusOK {
-				t.Fatalf("GET %s: got %d", path, res.Code)
+	for _, pagePath := range paths {
+		t.Run(pagePath, func(t *testing.T) {
+			response := request(t, handler, http.MethodGet, pagePath, nil)
+			if response.Code != http.StatusOK {
+				t.Fatalf("GET %s: got %d", pagePath, response.Code)
 			}
 
-			body := res.Body.String()
+			body := response.Body.String()
 			for _, expected := range []string{
 				"<html lang=\"pt-BR\">",
 				"<main class=\"document\" id=\"content\">",
 				"<nav class=\"sidebar\"",
-				"https://docs.ifacematch.com" + path,
+				"https://docs.ifacematch.com" + pagePath,
 				"/assets/htmx.min.js",
 			} {
 				if !strings.Contains(body, expected) {
-					t.Errorf("GET %s missing %q", path, expected)
+					t.Errorf("GET %s missing %q", pagePath, expected)
 				}
+			}
+
+			if !strings.Contains(body, `rel="canonical"`) {
+				t.Errorf("GET %s missing canonical tag", pagePath)
 			}
 		})
 	}
 }
 
-func TestHomeRedirect(t *testing.T) {
-	res := request(t, NewHandler(), http.MethodGet, "/", nil)
-	if res.Code != http.StatusPermanentRedirect {
-		t.Fatalf("unexpected status: %d", res.Code)
+func TestLegacyPageRedirects(t *testing.T) {
+	handler := NewHandler()
+	redirects := map[string]string{
+		"/docs.html":          "/",
+		"/docs-api.html":      "/api",
+		"/docs-sdk.html":      "/sdk",
+		"/docs-install.html":  "/installation",
+		"/releases.html":      "/releases",
+		"/upgrade-guide.html": "/upgrade",
 	}
-	if res.Header().Get("Location") != "/docs.html" {
-		t.Fatalf("unexpected location: %q", res.Header().Get("Location"))
+
+	for oldPath, canonicalPath := range redirects {
+		t.Run(oldPath, func(t *testing.T) {
+			for _, method := range []string{http.MethodGet, http.MethodHead} {
+				response := request(t, handler, method, oldPath, nil)
+				if response.Code != http.StatusMovedPermanently {
+					t.Errorf("%s %s returned %d instead of 301", method, oldPath, response.Code)
+				}
+				if location := response.Header().Get("Location"); location != canonicalPath {
+					t.Errorf("%s %s redirected to %q instead of %q", method, oldPath, location, canonicalPath)
+				}
+			}
+
+			response := request(t, handler, http.MethodGet, oldPath+"?source=legacy", nil)
+			if location := response.Header().Get("Location"); location != canonicalPath+"?source=legacy" {
+				t.Errorf("query not preserved: %s -> %s", oldPath, location)
+			}
+		})
+	}
+}
+
+func TestCanonicalTrailingSlashRedirects(t *testing.T) {
+	handler := NewHandler()
+	for _, pagePath := range []string{"/api", "/sdk", "/installation", "/releases", "/upgrade"} {
+		response := request(t, handler, http.MethodGet, pagePath+"/", nil)
+		if response.Code != http.StatusMovedPermanently {
+			t.Errorf("%s/ returned %d instead of 301", pagePath, response.Code)
+		}
+		if location := response.Header().Get("Location"); location != pagePath {
+			t.Errorf("%s/ redirected to %q", pagePath, location)
+		}
+	}
+}
+
+func TestDocumentationLinksUseCanonicalPaths(t *testing.T) {
+	handler := NewHandler()
+	legacyPaths := []string{
+		"/docs.html", "/docs-api.html", "/docs-sdk.html",
+		"/docs-install.html", "/releases.html", "/upgrade-guide.html",
+	}
+
+	for _, pagePath := range []string{"/", "/api", "/sdk", "/installation", "/releases", "/upgrade"} {
+		response := request(t, handler, http.MethodGet, pagePath, nil)
+		body := response.Body.String()
+		for _, legacyPath := range legacyPaths {
+			if strings.Contains(body, `href="`+legacyPath) {
+				t.Errorf("%s links to legacy URL %s", pagePath, legacyPath)
+			}
+		}
 	}
 }
 
@@ -74,6 +132,9 @@ func TestSearchHTMXAndEscaping(t *testing.T) {
 	}
 	if !strings.Contains(response.Body.String(), "SDK Web") {
 		t.Fatal("expected SDK Web search result")
+	}
+	if !strings.Contains(response.Body.String(), `href="/sdk"`) {
+		t.Fatal("search result must point to the canonical SDK page")
 	}
 	if strings.Contains(response.Body.String(), "<html") {
 		t.Fatal("HTMX must return an HTML fragment")
@@ -94,7 +155,7 @@ func TestSearchHTMXAndEscaping(t *testing.T) {
 
 func TestStaticOpenAPIAndAIAssets(t *testing.T) {
 	handler := NewHandler()
-	for _, path := range []string{
+	for _, assetPath := range []string{
 		"/openapi.json",
 		"/releases.json",
 		"/llms.txt",
@@ -106,9 +167,9 @@ func TestStaticOpenAPIAndAIAssets(t *testing.T) {
 		"/assets/htmx.min.js",
 		"/assets/app.js",
 	} {
-		res := request(t, handler, http.MethodGet, path, nil)
-		if res.Code != http.StatusOK || res.Body.Len() == 0 {
-			t.Errorf("%s returned status=%d length=%d", path, res.Code, res.Body.Len())
+		response := request(t, handler, http.MethodGet, assetPath, nil)
+		if response.Code != http.StatusOK || response.Body.Len() == 0 {
+			t.Errorf("%s returned status=%d length=%d", assetPath, response.Code, response.Body.Len())
 		}
 	}
 
@@ -125,55 +186,73 @@ func TestStaticOpenAPIAndAIAssets(t *testing.T) {
 	}
 }
 
+func TestSitemapUsesCanonicalPaths(t *testing.T) {
+	response := request(t, NewHandler(), http.MethodGet, "/sitemap.xml", nil)
+	if response.Code != http.StatusOK {
+		t.Fatalf("sitemap status: %d", response.Code)
+	}
+
+	sitemap := response.Body.String()
+	for _, pagePath := range []string{"/", "/api", "/sdk", "/installation", "/releases", "/upgrade"} {
+		expected := "<loc>https://docs.ifacematch.com" + pagePath + "</loc>"
+		if !strings.Contains(sitemap, expected) {
+			t.Errorf("sitemap missing %q", expected)
+		}
+	}
+	if strings.Contains(sitemap, ".html") {
+		t.Fatal("sitemap contains old page URLs")
+	}
+}
+
 func TestPrivateRoutesAreUnavailable(t *testing.T) {
 	handler := NewHandler()
-	for _, path := range []string{
+	for _, pagePath := range []string{
 		"/api/admin/v1/login",
 		"/api/portal/v1/login",
 		"/.env",
 		"/admin",
 		"/internal/content/catalog.go",
 	} {
-		res := request(t, handler, http.MethodGet, path, nil)
-		if res.Code != http.StatusNotFound {
-			t.Errorf("%s: expected 404, got %d", path, res.Code)
+		response := request(t, handler, http.MethodGet, pagePath, nil)
+		if response.Code != http.StatusNotFound {
+			t.Errorf("%s: expected 404, got %d", pagePath, response.Code)
 		}
 	}
 
-	res := request(t, handler, http.MethodPost, "/docs.html", nil)
-	if res.Code != http.StatusMethodNotAllowed {
-		t.Fatalf("unexpected POST status: %d", res.Code)
+	response := request(t, handler, http.MethodPost, "/api", nil)
+	if response.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("unexpected POST status: %d", response.Code)
 	}
 }
 
 func TestSecurityHeaders(t *testing.T) {
-	res := request(t, NewHandler(), http.MethodGet, "/docs.html", nil)
-	for _, key := range []string{
+	response := request(t, NewHandler(), http.MethodGet, "/", nil)
+	for _, header := range []string{
 		"X-Content-Type-Options",
 		"Content-Security-Policy",
 		"X-Frame-Options",
 		"Permissions-Policy",
 	} {
-		if res.Header().Get(key) == "" {
-			t.Errorf("missing security header %s", key)
+		if response.Header().Get(header) == "" {
+			t.Errorf("missing security header %s", header)
 		}
 	}
 }
 
 func TestSearchQueryLimit(t *testing.T) {
-	res := request(t, NewHandler(), http.MethodGet, "/search?q="+strings.Repeat("a", 121), nil)
-	if res.Code != http.StatusBadRequest {
-		t.Fatalf("unexpected status: %d", res.Code)
+	response := request(t, NewHandler(), http.MethodGet, "/search?q="+strings.Repeat("a", 121), nil)
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("unexpected status: %d", response.Code)
 	}
 }
 
 func TestExampleHTMLIsSourceOnly(t *testing.T) {
-	res := request(t, NewHandler(), http.MethodGet, "/example.html", nil)
-	if res.Code != http.StatusOK {
-		t.Fatalf("unexpected status: %d", res.Code)
+	response := request(t, NewHandler(), http.MethodGet, "/example.html", nil)
+	if response.Code != http.StatusOK {
+		t.Fatalf("unexpected status: %d", response.Code)
 	}
-	if got := res.Header().Get("Content-Type"); got != "text/plain; charset=utf-8" {
+	if got := response.Header().Get("Content-Type"); got != "text/plain; charset=utf-8" {
 		t.Fatalf("unexpected content type: %s", got)
 	}
-	_, _ = io.Copy(io.Discard, res.Body)
+	_, _ = io.Copy(io.Discard, response.Body)
 }

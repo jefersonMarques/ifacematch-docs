@@ -58,7 +58,7 @@ templ Layout(page Page, groups []Group, body templ.Component) {
 		<body>
 			<a class="skip-link" href="#content">Pular para o conteúdo</a>
 			<header class="site-header">
-				<a class="brand" href="/docs.html" aria-label="iFaceMatch documentação">
+				<a class="brand" href="/" aria-label="iFaceMatch documentação">
 					<span class="brand-mark" aria-hidden="true"></span>
 					iFaceMatch
 					<span class="brand-divider"></span>
@@ -86,7 +86,7 @@ templ Layout(page Page, groups []Group, body templ.Component) {
 							<div id="search-results" class="search-results" aria-live="polite" role="region" aria-label="Resultados da busca"></div>
 						</form>
 					</div>
-					<a class="header-link" href="/releases.html">Releases</a>
+					<a class="header-link" href="/releases">Releases</a>
 					<a class="header-link" href="https://portal.ifacematch.com/">Portal</a>
 					<button type="button" class="menu-toggle" data-menu-toggle aria-label="Abrir menu de documentação" aria-controls="docs-sidebar" aria-expanded="false">☰ Menu</button>
 				</div>
@@ -128,7 +128,7 @@ templ DocumentPage(page Page, groups []Group) {
 }
 
 templ SearchListing(query string, results []SearchResult) {
-	<nav class="breadcrumb" aria-label="Caminho"><a href="/docs.html">Docs</a><span>/</span>Busca</nav>
+	<nav class="breadcrumb" aria-label="Caminho"><a href="/">Docs</a><span>/</span>Busca</nav>
 	<h1>Buscar documentação</h1>
 	if query == "" {
 		<p class="lead">Digite uma palavra ou expressão para encontrar tópicos.</p>
