@@ -1,0 +1,59 @@
+name: Signed-source binary release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  linux-amd64:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout release tag
+        uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Go
+        uses: actions/setup-go@v7.0.0
+        with:
+          go-version: '1.25.6'
+          cache: true
+          cache-dependency-path: go.mod
+
+      - name: Validate version tag
+        run: |
+          [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+
+      - name: Generate templ components
+        run: go run github.com/a-h/templ/cmd/templ@v0.3.1020 generate
+
+      - name: Validate source
+        run: |
+          go test -mod=mod ./...
+          go vet -mod=mod ./...
+
+      - name: Compile standalone release
+        run: |
+          mkdir -p dist
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+            go build -mod=mod -trimpath \
+            -ldflags="-s -w -X main.version=$GITHUB_REF_NAME" \
+            -o dist/ifacematch-docs-linux-amd64 ./cmd/docs
+          test "$("./dist/ifacematch-docs-linux-amd64" -version 2>&1 | grep -c "$GITHUB_REF_NAME")" -gt 0
+          cd dist
+          sha256sum ifacematch-docs-linux-amd64 > SHA256SUMS
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            dist/ifacematch-docs-linux-amd64 \
+            dist/SHA256SUMS \
+            --verify-tag \
+            --title "iFaceMatch Docs $GITHUB_REF_NAME" \
+            --generate-notes

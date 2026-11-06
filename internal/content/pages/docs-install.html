@@ -1,0 +1,44 @@
+<nav class="breadcrumb" aria-label="Caminho"><a href="/docs.html">Docs</a><span>/</span>Instalação Customer Hosted</nav><span class="eyebrow">Operação / Instalação</span><h1>Instalação Customer Hosted</h1><p class="lead">Prepare um ambiente Ubuntu 24.04 amd64 com systemd, conectividade HTTPS e PostgreSQL 16. Separe os serviços internos da exposição pública por proxy.</p><section class="doc-section" id="requirements"><h2>Pré-requisitos</h2><ul><li>Ubuntu Server 24.04 amd64 nativo ou VM, com <code>systemd</code> como PID 1.</li><li>SSH administrativo, saída HTTPS e repositórios apt acessíveis.</li><li>PostgreSQL 16 e espaço de disco suficiente para modelos, logs e backups.</li><li>Domínio HTTPS com certificado confiável e roteamento exclusivo da API e do Console.</li><li>Contrato e release assinada autorizados pelo Portal para a instalação em questão.</li></ul><div class="note warning"><strong>Distribuição controlada</strong><p>O pacote 0.1.7 foi aplicado ao piloto Rododata, mas não está disponível como download comercial geral no Portal. Não use os arquivos desse piloto para criar outra instalação.</p></div></section><section class="doc-section" id="profiles"><h2>Escolher o perfil de instalação</h2><h3>Servidor dedicado</h3><p>O instalador pode preparar o servidor web e HTTPS em uma máquina sem outros serviços disputando portas públicas.</p><h3>Servidor compartilhado</h3><p>Use quando Nginx, Apache, Docker ou Nginx Proxy Manager já utilizam portas 80/443. Configure antecipadamente proxy e TLS; o instalador não deve alterar serviços existentes.</p><p>Restrinja API e Console a interfaces privadas de loopback e encaminhe somente rotas autorizadas ao domínio HTTPS.</p></section><section class="doc-section" id="proxy-recipe"><h2>Exemplo: Nginx Proxy Manager + Apache</h2><p>Esta receita foi usada como referência para um perfil compartilhado. <strong>Não copie os endereços sem conferir a rede Docker e as portas reais.</strong> Os serviços internos continuam restritos a loopback. O Apache recebe o tráfego HTTP do NPM e encaminha as rotas corretas.</p><div class="note warning"><strong>Ambiente específico</strong><p>O gateway <code>172.17.0.1</code> é somente um exemplo. Confirme o gateway de seu container, o domínio HTTPS, a disponibilidade de portas e a configuração existente. Nunca reinicie serviços de terceiros para liberar essas portas.</p></div><div class="code-shell"><div class="code-header"><span class="code-label">Shell · inspeção</span><button type="button" class="code-copy" data-copy-code aria-label="Copiar exemplo de código">Copiar</button></div><pre><code>docker inspect nginx-proxy-manager \
+  --format '{{range .NetworkSettings.Networks}}{{.Gateway}}{{end}}'
+sudo apache2ctl -S
+sudo ss -ltnp '( sport = :8980 or sport = :8981 or sport = :8982 )'
+sudo a2enmod proxy proxy_http headers
+sudo install -d -m 0755 -o root -g root /var/www/ifacematch</code></pre></div><p>Crie um VirtualHost isolado, adaptando IP, domínio e portas após inspeção. O diretório do SDK deve estar vazio antes da instalação e é preenchido pela release autorizada.</p><div class="code-shell"><div class="code-header"><span class="code-label">Apache · /etc/apache2/sites-available/ifacematch-internal.conf</span><button type="button" class="code-copy" data-copy-code aria-label="Copiar exemplo de código">Copiar</button></div><pre><code>Listen 172.17.0.1:8980
+
+&lt;VirtualHost 172.17.0.1:8980&gt;
+    ServerName face.example.com
+    DocumentRoot /var/www/ifacematch
+
+    ProxyRequests Off
+    ProxyPreserveHost On
+    RequestHeader set X-Forwarded-Proto "https"
+
+    &lt;Directory /var/www/ifacematch&gt;
+        Options -Indexes
+        AllowOverride None
+        Require all granted
+    &lt;/Directory&gt;
+
+    ProxyPass "/verify.html" "!"
+    ProxyPass "/styles.css" "!"
+    ProxyPass "/dist/" "!"
+    ProxyPass "/assets/" "!"
+    ProxyPass "/models/" "!"
+
+    ProxyPass "/v1/" "http://127.0.0.1:8981/v1/"
+    ProxyPassReverse "/v1/" "http://127.0.0.1:8981/v1/"
+
+    ProxyPass "/" "http://127.0.0.1:8982/"
+    ProxyPassReverse "/" "http://127.0.0.1:8982/"
+&lt;/VirtualHost&gt;</code></pre></div><div class="code-shell"><div class="code-header"><span class="code-label">Shell · validação</span><button type="button" class="code-copy" data-copy-code aria-label="Copiar exemplo de código">Copiar</button></div><pre><code>sudo a2ensite ifacematch-internal.conf
+sudo apache2ctl configtest
+sudo systemctl reload apache2</code></pre></div><p>No NPM, use Scheme <code>http</code>, Forward Hostname como o gateway correto, Forward Port <code>8980</code>, SSL válido com Force SSL e domínio <code>face.example.com</code>. Não exponha as portas internas <code>8981</code> e <code>8982</code> à internet. O proxy preserva o cabeçalho <code>Host</code>, exigido pelo Console em produção.</p></section><section class="doc-section" id="prepare"><h2>Diagnóstico antes de instalar</h2><p>Use apenas o instalador obtido no Portal quando a distribuição da versão estiver efetivamente autorizada. O comando abaixo demonstra o <strong>modo diagnóstico</strong> do instalador oficial; não executa a instalação.</p><div class="code-shell"><div class="code-header"><span class="code-label">Shell · diagnóstico somente leitura</span><button type="button" class="code-copy" data-copy-code aria-label="Copiar exemplo de código">Copiar</button></div><pre><code class="language-bash">curl --fail --silent --show-error \
+  --proto '=https' \
+  --output ifacematch-install.sh \
+  https://portal.ifacematch.com/install.sh
+
+sudo bash ./ifacematch-install.sh --diagnose</code></pre></div><p>Confirme o SHA-256 e a assinatura da release com a chave pública de distribuição fixada antes de executar qualquer operação de instalação.</p></section><section class="doc-section" id="postinstall"><h2>Após a instalação</h2><div class="code-shell"><div class="code-header"><span class="code-label">Shell · inspeção ilustrativa</span><button type="button" class="code-copy" data-copy-code aria-label="Copiar exemplo de código">Copiar</button></div><pre><code class="language-bash">sudo systemctl is-active ifacematch-server
+sudo systemctl is-active ifacematch-console
+
+curl --fail --silent --show-error \
+  http://127.0.0.1:8981/health</code></pre></div><p>Confira o health documentado para a versão do seu Server. A checagem privada efetivamente utilizada no piloto foi <code>http://127.0.0.1:8981/health</code>. Não interprete a exibição de login do Console como teste funcional completo de biometria.</p><p>O fluxo de primeiro login registra operador individual com MFA. Crie aplicações e credenciais somente após a instalação estar íntegra.</p></section><section class="doc-section" id="support"><h2>Recuperação de instalação parcial</h2><p>Se houver falha, preserve os arquivos de estado do instalador e os backups. Não execute novamente um script de instalação em um servidor parcialmente preparado sem identificar o ponto de interrupção. Consulte o <a href="/upgrade-guide.html">guia de upgrade e rollback</a> para instalações existentes.</p></section><footer class="doc-footer">iFaceMatch · Documentação de integração Customer Hosted · <a href="/docs.md">Versão Markdown</a> · <a href="/llms.txt">Índice para IAs</a></footer>

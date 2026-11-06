@@ -1,0 +1,334 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "iFaceMatch Customer Hosted — public application API subset",
+    "version": "0.1.6",
+    "summary": "Verified integration endpoints for liveness, enrollment and 1:1 verification.",
+    "description": "Documented subset grounded in the Customer Hosted Go integration example. Not an exhaustive specification. Administrative Console endpoints are intentionally excluded. A distribution release version may differ from this Server component version."
+  },
+  "servers": [
+    {
+      "url": "https://face.example.com",
+      "description": "Replace with the authorized installation HTTPS origin."
+    }
+  ],
+  "security": [
+    {
+      "applicationBearer": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Liveness"
+    },
+    {
+      "name": "Enrollment"
+    },
+    {
+      "name": "Verification"
+    }
+  ],
+  "paths": {
+    "/v1/liveness/checks": {
+      "post": {
+        "tags": [
+          "Liveness"
+        ],
+        "summary": "Create liveness check",
+        "operationId": "createLivenessCheck",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false
+              },
+              "example": {}
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Accepted check issuance; not an identity decision.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckIssue"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing or invalid application credential"
+          },
+          "403": {
+            "description": "Not authorized for this operation"
+          }
+        }
+      }
+    },
+    "/v1/liveness/checks/{checkId}": {
+      "get": {
+        "tags": [
+          "Liveness"
+        ],
+        "summary": "Get check status",
+        "operationId": "getLivenessCheck",
+        "parameters": [
+          {
+            "name": "checkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current server status. Validate and handle terminal decisions according to your integration.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid application credential"
+          },
+          "404": {
+            "description": "Check was not found or cannot be read"
+          }
+        }
+      }
+    },
+    "/v1/enrollments": {
+      "post": {
+        "tags": [
+          "Enrollment"
+        ],
+        "summary": "Create enrollment check",
+        "operationId": "createEnrollmentCheck",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubjectRequest"
+              },
+              "example": {
+                "subjectId": "person_123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Accepted check issuance; not an identity decision.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckIssue"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing or invalid application credential"
+          },
+          "403": {
+            "description": "Not authorized for this operation"
+          }
+        }
+      }
+    },
+    "/v1/enrollments/{checkId}": {
+      "get": {
+        "tags": [
+          "Enrollment"
+        ],
+        "summary": "Get check status",
+        "operationId": "getEnrollmentCheck",
+        "parameters": [
+          {
+            "name": "checkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current server status. Validate and handle terminal decisions according to your integration.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid application credential"
+          },
+          "404": {
+            "description": "Check was not found or cannot be read"
+          }
+        }
+      }
+    },
+    "/v1/verifications": {
+      "post": {
+        "tags": [
+          "Verification"
+        ],
+        "summary": "Create verification check",
+        "operationId": "createVerificationCheck",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubjectRequest"
+              },
+              "example": {
+                "subjectId": "person_123"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Accepted check issuance; not an identity decision.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckIssue"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request"
+          },
+          "401": {
+            "description": "Missing or invalid application credential"
+          },
+          "403": {
+            "description": "Not authorized for this operation"
+          }
+        }
+      }
+    },
+    "/v1/verifications/{checkId}": {
+      "get": {
+        "tags": [
+          "Verification"
+        ],
+        "summary": "Get check status",
+        "operationId": "getVerificationCheck",
+        "parameters": [
+          {
+            "name": "checkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current server status. Validate and handle terminal decisions according to your integration.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid application credential"
+          },
+          "404": {
+            "description": "Check was not found or cannot be read"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "applicationBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Application credential held exclusively by the integrator backend."
+      }
+    },
+    "schemas": {
+      "CheckIssue": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque check identifier."
+          },
+          "verificationUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Temporary HTTPS SDK capture URL."
+          }
+        },
+        "required": [
+          "id",
+          "verificationUrl"
+        ]
+      },
+      "CheckStatus": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "decision": {
+            "type": "string"
+          },
+          "similarity": {
+            "type": "number",
+            "description": "Technical 1:1 similarity score, not a confidence percentage."
+          }
+        }
+      },
+      "SubjectRequest": {
+        "type": "object",
+        "properties": {
+          "subjectId": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        },
+        "required": [
+          "subjectId"
+        ],
+        "additionalProperties": false
+      }
+    }
+  }
+}

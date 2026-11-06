@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-11-06",
+  "distributionAuthority": "ifm_distribution_prod_v1",
+  "releases": [
+    {
+      "version": "0.1.7",
+      "date": "2026-11-05",
+      "platform": "ubuntu-24.04",
+      "architecture": "amd64",
+      "artifactCount": 69,
+      "sha256": "65358027c374a794f9a0201df229469da49e0b844a59486303e27df1a434b9a5",
+      "availability": "private_pilot_only",
+      "downloadUrl": null,
+      "components": {
+        "server": "0.1.6",
+        "console": "0.1.4"
+      },
+      "changes": [
+        "console/ifacematch-console"
+      ],
+      "notes": "Server preserved. Browser MFA match threshold write still awaiting functional verification."
+    },
+    {
+      "version": "0.1.6",
+      "date": "2026-11-04",
+      "platform": "ubuntu-24.04",
+      "architecture": "amd64",
+      "artifactCount": 69,
+      "sha256": "608197ec0bf762efc061c2dd6a9b047c293932c37a2b4df507a65915c9278c16",
+      "availability": "private_pilot_only",
+      "downloadUrl": null,
+      "components": {
+        "server": "0.1.6",
+        "console": "0.1.3"
+      },
+      "changes": [
+        "server/ifacematch-server",
+        "bin/ifacematchctl"
+      ],
+      "notes": "Historical Server upgrade."
+    }
+  ]
+}

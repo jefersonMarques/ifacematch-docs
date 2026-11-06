@@ -1,0 +1,11 @@
+# templ generated output
+*_templ.go
+
+# local builds and editor state
+/dist/
+/bin/
+.idea/
+.vscode/
+*.test
+*.out
+.DS_Store
