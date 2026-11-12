@@ -7,8 +7,8 @@ import (
 
 func TestEmbeddedPages(t *testing.T) {
 	pages := Pages()
-	if len(pages) != 6 {
-		t.Fatalf("expected six documentation pages, got %d", len(pages))
+	if len(pages) != 7 {
+		t.Fatalf("expected seven documentation pages, got %d", len(pages))
 	}
 
 	for _, entry := range pages {
@@ -23,7 +23,7 @@ func TestEmbeddedPages(t *testing.T) {
 }
 
 func TestCanonicalCatalogPaths(t *testing.T) {
-	paths := []string{"/", "/api", "/sdk", "/installation", "/releases", "/upgrade"}
+	paths := []string{"/", "/api", "/upload-image", "/sdk", "/installation", "/releases", "/upgrade"}
 	pages := Pages()
 
 	for index, expected := range paths {
@@ -56,6 +56,7 @@ func TestStaticAssetsAvailable(t *testing.T) {
 		"assets/docs.css",
 		"assets/htmx.min.js",
 		"openapi.json",
+		"openapi-preview.json",
 		"llms.txt",
 	} {
 		file, err := files.Open(name)
