@@ -23,6 +23,28 @@ POST /v1/verifications, body {"subjectId":"person_123"}; GET /v1/verifications/{
 
 POST bem-sucedido retorna HTTP 201 com id e verificationUrl, HTTPS e /verify.html#identity=<temporary-token>. O Server fornece o resultado oficial consultado por GET; emissão e HTTP 201 não são decisão biométrica.
 
+## 3.1. Prévia de desenvolvimento: cadastro facial por fotografia (indisponível em produção)
+
+Fonte: Server PR #56 (Draft), branch feature/uploaded-face-enrollment-v1. A release comercial 0.1.11 preserva o Server anterior; **não contém** estas rotas. Uma futura distribuição combinada de Server e Secure Core >=0.2.2 é necessária, e os testes comerciais/rollback permanecem pendentes.
+
+POST /v1/enrollments/images: multipart/form-data exatamente com subjectId (1 a 128 caracteres) e image (JPEG ou PNG, máximo 4 MiB, dimensões 80 a 4096 px por eixo, máximo 8 megapixels). Bearer com escopo enrollment:create. Sucesso 201 retorna id, subjectId, status active, enrollmentMethod uploaded_image, livenessPerformed false, referenceImageSha256, imageAvailable e createdAt. O hash é do JPEG normalizado. Foto não realiza liveness nem confirma identidade.
+
+GET /v1/subjects/{subjectId}/enrollment: requer checks:read; retorna metadados. GET /v1/subjects/{subjectId}/enrollment/image: requer enrollment:image:read; retorna image/jpeg, attachment, Cache-Control no-store. DELETE /v1/subjects/{subjectId}/enrollment: revogação existente. POST /v1/verifications permanece o fluxo 1:1 de comparação com uma referência.
+
+Erros relevantes: 400 multipart inválido, 401/403 autenticação/escopo, 404 cadastro ausente, 409 duplicado, 422 zero ou múltiplos rostos/qualidade, 429 cota, 502 extração nativa, 503 motor/Core incompatível.
+
+Exemplo de uso futuro no backend:
+
+```bash
+curl --request POST \
+  "$IFACEMATCH_API_ORIGIN/v1/enrollments/images" \
+  --header "Authorization: Bearer $IFACEMATCH_API_KEY" \
+  --form "subjectId=driver-123" \
+  --form "image=@/secure/path/reference.jpg;type=image/jpeg"
+```
+
+Guia: https://docs.ifacematch.com/upload-image. OpenAPI de prévia: https://docs.ifacematch.com/openapi-preview.json. OpenAPI estável: https://docs.ifacematch.com/openapi.json (sem as rotas ainda não publicadas).
+
 ## 4. SDK Web
 
 O SDK Web é servido no domínio autorizado do próprio Server, incluindo /verify.html. O navegador abre a verificationUrl efêmera. O backend consulta e armazena apenas os dados necessários à finalidade. O exemplo disponível em /example-backend.go demonstra a emissão e consulta, enquanto /example.js e /example.html ilustram a experiência local de captura.
