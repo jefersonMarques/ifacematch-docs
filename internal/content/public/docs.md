@@ -71,10 +71,11 @@ Ubuntu Server 24.04 amd64 com systemd, PostgreSQL 16 e HTTPS confiável. Usar so
 
 ## Releases
 
+- Pacote `0.1.11`, publicado em 12/11/2026: Console atualizado, Server/Core/Model Pack/SDK preservados da 0.1.10; 87 artefatos assinados. SHA-256 `4a44480bc5fe340ae1c26405284599560325807ac88c8c0daab8a645df10dc32`. [GitHub Release](https://github.com/jefersonMarques/ifacematch/releases/tag/v0.1.11). **Não contém o endpoint de upload facial**.
 - Pacote `0.1.7`, implantação piloto privada em 05/11/2026: Console 0.1.4, Server 0.1.6 mantido. SHA-256: `65358027c374a794f9a0201df229469da49e0b844a59486303e27df1a434b9a5`.
 - Pacote `0.1.6`, implantação piloto privada em 04/11/2026: Server 0.1.6. SHA-256: `608197ec0bf762efc061c2dd6a9b047c293932c37a2b4df507a65915c9278c16`.
 - Assinatura da distribuição: Ed25519, autoridade `ifm_distribution_prod_v1`.
-- Os pacotes do piloto não estão publicados para download comercial geral.
+- As releases históricas 0.1.6 e 0.1.7 eram de piloto privado; a 0.1.11 está publicada para download público no GitHub Releases, sem dispensar licença de uso.
 
 ## Upgrade
 
