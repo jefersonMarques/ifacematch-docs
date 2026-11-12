@@ -80,7 +80,9 @@ A Release **não realiza deploy automaticamente**. O binário não é assinado c
 5. Ativar o vhost, validar `nginx -t` e recarregar o Nginx.
 6. Verificar `/healthz`, as sete páginas (incluindo a prévia de envio de imagem), a busca, `/openapi.json`, `/openapi-preview.json` e os arquivos para IA.
 
-Para atualizar uma instalação existente, baixar o executável e `SHA256SUMS` da Release aprovada e executar `deploy/install-release.sh` como root. O script verifica o checksum, preserva o binário anterior e tenta rollback se o serviço ou o health check falhar. Não use este script para a instalação inicial.
+Para atualizar uma instalação existente, baixar o executável e `SHA256SUMS` da Release aprovada e executar `deploy/install-release.sh` como root.
+
+Para a versão `v0.1.2`, o instalador incluído na tag original verifica `/healthz` imediatamente após reiniciar o serviço e pode produzir rollback indevido durante a inicialização. **Não modificar a tag publicada.** Usar a correção de `deploy/install-release.sh` da branch `main` em commit revisado/pinado: ela aguarda até 30 segundos, confirma `/upload-image` e `/openapi-preview.json` e preserva rollback atômico do executável. O pacote `v0.1.2` já publicado permanece idêntico e mantém o mesmo SHA-256. O script verifica o checksum, preserva o binário anterior e tenta rollback se o serviço ou o health check falhar. Não use este script para a instalação inicial.
 
 ## SEO e migração
 
