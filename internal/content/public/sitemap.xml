@@ -2,6 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://docs.ifacematch.com/</loc></url>
   <url><loc>https://docs.ifacematch.com/api</loc></url>
+  <url><loc>https://docs.ifacematch.com/upload-image</loc></url>
   <url><loc>https://docs.ifacematch.com/sdk</loc></url>
   <url><loc>https://docs.ifacematch.com/installation</loc></url>
   <url><loc>https://docs.ifacematch.com/releases</loc></url>
