@@ -39,6 +39,12 @@ var catalog = []Page{
 		Description: "Contratos de prova de vida, cadastro facial e verificação 1:1 com exemplos de requisições e resultados.",
 	},
 	{
+		Path:        "/upload-image",
+		SourceFile:  "upload-image.html",
+		Title:       "Cadastro facial por imagem — prévia",
+		Description: "Contrato em desenvolvimento: upload JPEG/PNG de referência facial com subjectId, autenticação e consulta de foto; ainda indisponível em produção.",
+	},
+	{
 		Path:        "/sdk",
 		SourceFile:  "docs-sdk.html",
 		Title:       "SDK Web e captura facial",
