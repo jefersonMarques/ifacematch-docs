@@ -39,12 +39,14 @@ Páginas completas são geradas no servidor e indexáveis sem JavaScript. HTMX a
 | --- | --- |
 | `/` | Introdução e início rápido |
 | `/api` | Endpoints REST |
+| `/upload-image` | Prévia de envio de fotografia facial; não disponível na release comercial 0.1.11 |
 | `/sdk` | SDK Web |
 | `/installation` | Instalação |
 | `/releases` | Histórico de versões |
 | `/upgrade` | Upgrade e rollback |
 | `/search?q=` | Busca SSR/HTMX |
 | `/openapi.json` | OpenAPI 3.1 |
+| `/openapi-preview.json` | OpenAPI 3.1 separada com endpoints de desenvolvimento não distribuídos |
 | `/llms.txt`, `/llms-full.txt`, `/docs.md` | Documentação legível por agentes |
 | `/robots.txt`, `/sitemap.xml` | Descoberta e indexação |
 | `/healthz` | Health check local |
