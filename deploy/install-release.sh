@@ -40,6 +40,16 @@ binary_name="$(basename "$binary")"
     exit 2
 }
 
+
+release_banner="$("$binary" -version 2>&1)" || {
+    echo "[BLOCK] Cannot execute candidate documentation binary" >&2
+    exit 2
+}
+if [[ "$release_banner" != *"$release_version"* ]]; then
+    echo "[BLOCK] Candidate binary does not match requested version $release_version" >&2
+    exit 2
+fi
+
 destination="/opt/ifacematch-docs/bin/ifacematch-docs"
 [[ -f "$destination" && ! -L "$destination" ]] || {
     echo "[BLOCK] Existing service binary required; see README for first install" >&2
@@ -57,25 +67,66 @@ mkdir -p -m 0700 "$backup_dir"
 backup="${backup_dir}/$(date -u +%Y%m%dT%H%M%SZ)-ifacematch-docs"
 
 rollback() {
-    local status="$?"
+    local status="${1:-1}"
     trap - ERR
 
     if [[ -f "$backup" ]]; then
-        install -m 0755 "$backup" "$destination"
-        systemctl restart ifacematch-docs.service || true
+        if install -m 0755 "$backup" "$destination" && \
+            systemctl restart ifacematch-docs.service; then
+            echo "[ROLLBACK] Previous documentation binary restored: $backup" >&2
+        else
+            echo "[CRITICAL] Automatic rollback failed; recover from: $backup" >&2
+        fi
     fi
 
     rm -f -- "$candidate"
     exit "$status"
 }
 
-trap rollback ERR
+wait_for_deployment() {
+    local attempt
+    for ((attempt = 1; attempt <= 30; attempt++)); do
+        if ! systemctl is-active --quiet ifacematch-docs.service; then
+            sleep 1
+            continue
+        fi
+
+        if ! curl --fail --silent --show-error --max-time 2 \
+            http://127.0.0.1:8091/healthz >/dev/null 2>&1; then
+            sleep 1
+            continue
+        fi
+
+        if [[ "$release_version" == "v0.1.2" ]]; then
+            if ! curl --fail --silent --show-error --max-time 3 \
+                http://127.0.0.1:8091/upload-image 2>/dev/null | \
+                grep -Fq '/v1/enrollments/images'; then
+                sleep 1
+                continue
+            fi
+
+            if ! curl --fail --silent --show-error --max-time 3 \
+                http://127.0.0.1:8091/openapi-preview.json 2>/dev/null | \
+                grep -Fq '"/v1/enrollments/images"'; then
+                sleep 1
+                continue
+            fi
+        fi
+        return 0
+    done
+    return 1
+}
+
+trap 'rollback $?' ERR
 install -m 0755 "$destination" "$backup"
 install -m 0755 "$binary" "$candidate"
 mv -f -- "$candidate" "$destination"
 
 systemctl restart ifacematch-docs.service
-curl --fail --silent --show-error --max-time 10 http://127.0.0.1:8091/healthz >/dev/null
+if ! wait_for_deployment; then
+    echo "[BLOCK] Documentation service failed readiness checks; restoring previous binary" >&2
+    rollback 1
+fi
 
 trap - ERR
 echo "[OK] Updated iFaceMatch Docs to $release_version"
