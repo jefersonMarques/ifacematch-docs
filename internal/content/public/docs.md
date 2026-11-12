@@ -1,7 +1,7 @@
 # iFaceMatch — Documentação pública de integração
 
 Fonte canônica: https://docs.ifacematch.com/
-Atualizado: 2026-11-06. Idioma: pt-BR.
+Atualizado: 2026-11-12. Idioma: pt-BR.
 
 ## Arquitetura
 
@@ -34,6 +34,28 @@ curl --request POST \
 ```
 
 O trecho acima serve de demonstração. Em produção, evite exportar credenciais em ambiente compartilhado ou imprimir tokens em logs/shell history.
+
+## Prévia: cadastro por envio de imagem (ainda indisponível em produção)
+
+A implementação encontra-se no [Server PR #56](https://github.com/jefersonMarques/ifacematch-server/pull/56), em Draft. A distribuição 0.1.11 atualizou somente o Console, portanto **não fornece esses endpoints**; a ativação exige Server compatível e Secure Core >= 0.2.2. Esta seção é contrato em desenvolvimento, não API comercial estável.
+
+- `POST /v1/enrollments/images`: Bearer com `enrollment:create`, `multipart/form-data`, exatamente `subjectId` (1–128 caracteres) e `image` (JPEG/PNG até 4 MiB, 80–4096 px por dimensão e máximo de 8 megapixels).
+- `GET /v1/subjects/{subjectId}/enrollment`: requer `checks:read`, retorna metadados da referência.
+- `GET /v1/subjects/{subjectId}/enrollment/image`: requer `enrollment:image:read`, retorna JPEG normalizado com `Cache-Control: no-store`.
+- `DELETE /v1/subjects/{subjectId}/enrollment`: revogação da referência pela rota existente.
+- Sem rosto, com vários rostos ou qualidade insuficiente: HTTP 422; referência duplicada: 409; Secure Core incompatível: 503. Importar uma foto não é prova de vida nem autenticação da identidade.
+
+Exemplo planejado para backend autorizado:
+
+```bash
+curl --request POST \
+  "$IFACEMATCH_API_ORIGIN/v1/enrollments/images" \
+  --header "Authorization: Bearer $IFACEMATCH_API_KEY" \
+  --form "subjectId=driver-123" \
+  --form "image=@/secure/path/reference.jpg;type=image/jpeg"
+```
+
+Documentação completa: https://docs.ifacematch.com/upload-image; contrato **exclusivamente de prévia**: https://docs.ifacematch.com/openapi-preview.json. A especificação estável `/openapi.json` continua sem essas operações até a distribuição comercial.
 
 ## SDK Web
 
