@@ -29,6 +29,7 @@ var navigation = []views.Group{
 			{Label: "API REST", URL: "/api"},
 			{Label: "Prova de vida", URL: "/api#liveness"},
 			{Label: "Cadastro facial", URL: "/api#enrollment"},
+			{Label: "Envio de imagem (prévia)", URL: "/upload-image"},
 			{Label: "Verificação 1:1", URL: "/api#verification"},
 			{Label: "SDK Web", URL: "/sdk"},
 		},
@@ -39,6 +40,7 @@ var navigation = []views.Group{
 			{Label: "Releases", URL: "/releases"},
 			{Label: "Upgrade e rollback", URL: "/upgrade"},
 			{Label: "Especificação OpenAPI", URL: "/openapi.json"},
+			{Label: "OpenAPI prévia", URL: "/openapi-preview.json"},
 			{Label: "Documentação para IA", URL: "/llms.txt"},
 		},
 	},
@@ -55,6 +57,7 @@ var legacyPagePaths = map[string]string{
 
 var publicAssets = []string{
 	"/openapi.json",
+	"/openapi-preview.json",
 	"/releases.json",
 	"/docs.md",
 	"/llms.txt",
