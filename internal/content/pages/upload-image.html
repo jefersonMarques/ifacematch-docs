@@ -1,0 +1,80 @@
+<nav class="breadcrumb" aria-label="Caminho"><a href="/">Docs</a><span>/</span><a href="/api">API REST</a><span>/</span>Cadastro por imagem</nav>
+<span class="eyebrow">Integração / API · Prévia técnica</span>
+<h1>Cadastro facial por envio de imagem</h1>
+<p class="lead">Importe uma fotografia JPEG ou PNG para registrar uma referência facial vinculada a <code>subjectId</code>, diretamente pelo backend da sua aplicação.</p>
+
+<div class="note warning"><strong>Não disponível na release comercial atual</strong><p>Este contrato está implementado no <a href="https://github.com/jefersonMarques/ifacematch-server/pull/56">Server PR #56 (Draft)</a>, ainda sem merge nem distribuição homologada. O pacote <code>0.1.11</code> atualizado em 12/11/2026 modificou apenas o Console e <strong>não disponibiliza estas rotas</strong>. É necessária uma futura release combinada do Server com Secure Core <code>0.2.2</code> ou superior. Este guia é uma prévia para planejamento de integrações, não uma garantia de disponibilidade.</p></div>
+
+<section class="doc-section" id="overview">
+<h2>Quando utilizar</h2>
+<p>O upload importa uma <strong>referência</strong> para comparação posterior 1:1, sem documento de identidade ou serviço externo. Ele <strong>não executa prova de vida</strong> nem confirma que a fotografia pertence à pessoa que a enviou. A verificação futura continua a utilizar <code>POST /v1/verifications</code> e a captura autorizada pelo SDK.</p>
+<p>Requisitar a imagem somente mediante autorização e finalidade legítima. As imagens e templates permanecem isolados pelo tenant e pela aplicação na instalação Customer Hosted.</p>
+</section>
+
+<section class="doc-section" id="upload">
+<h2>1. Enviar imagem facial</h2>
+<div class="api-row"><span class="api-method post">POST</span><code>/v1/enrollments/images</code><span>Prévia — não disponível no pacote 0.1.11</span></div>
+<p>Execute a chamada somente no backend da aplicação, em conexão HTTPS, com <code>Authorization: Bearer &lt;application-key&gt;</code> e escopo <code>enrollment:create</code>. Use <code>multipart/form-data</code>, com <strong>exatamente dois campos</strong>:</p>
+<div class="table-wrap"><table><thead><tr><th>Campo</th><th>Tipo</th><th>Regras</th></tr></thead><tbody>
+<tr><td><code>subjectId</code></td><td>Texto</td><td>Identificador da pessoa, 1 a 128 caracteres, conforme validador do Server</td></tr>
+<tr><td><code>image</code></td><td>Arquivo</td><td>JPEG ou PNG, até 4 MiB; de 80×80 a 4096×4096 pixels; máximo de 8 milhões de pixels</td></tr>
+</tbody></table></div>
+<div class="code-shell"><div class="code-header"><span class="code-label">Shell · backend autorizado · prévia</span><button type="button" class="code-copy" data-copy-code aria-label="Copiar exemplo de código">Copiar</button></div><pre><code class="language-bash">curl --request POST \
+  "$IFACEMATCH_API_ORIGIN/v1/enrollments/images" \
+  --header "Authorization: Bearer $IFACEMATCH_API_KEY" \
+  --form "subjectId=driver-123" \
+  --form "image=@/secure/path/reference.jpg;type=image/jpeg"</code></pre></div>
+<p>Não configure manualmente o cabeçalho <code>Content-Type</code>: o cliente HTTP deve gerar o <code>boundary</code> do formulário. O Server valida o conteúdo real e normaliza a fotografia para JPEG antes de gerar a referência nativa. Fotos sem rosto ou com múltiplos rostos são recusadas.</p>
+</section>
+
+<section class="doc-section" id="result">
+<h2>2. Resposta de cadastro</h2>
+<div class="api-row"><span class="api-method post">201</span><code>application/json</code><span>Referência registrada</span></div>
+<div class="code-shell"><div class="code-header"><span class="code-label">JSON · exemplo ilustrativo</span><button type="button" class="code-copy" data-copy-code aria-label="Copiar exemplo de código">Copiar</button></div><pre><code class="language-json">{
+  "id": "chk_example123",
+  "subjectId": "driver-123",
+  "status": "active",
+  "enrollmentMethod": "uploaded_image",
+  "livenessPerformed": false,
+  "referenceImageSha256": "EXAMPLE_NORMALIZED_JPEG_SHA256",
+  "imageAvailable": true,
+  "createdAt": "2026-11-09T18:00:00Z"
+}</code></pre></div>
+<p><strong>Atenção:</strong> a resposta <code>201</code> indica referência cadastrada, <strong>não</strong> identidade confirmada. O hash refere-se à foto JPEG normalizada, não necessariamente ao arquivo original enviado. A resposta não contém embedding nem bytes da foto.</p>
+</section>
+
+<section class="doc-section" id="retrieve">
+<h2>3. Consultar cadastro e recuperar a foto</h2>
+<div class="api-row"><span class="api-method">GET</span><code>/v1/subjects/{subjectId}/enrollment</code><span>Escopo checks:read</span></div>
+<p>Retorna os metadados da referência ativa sem expor a fotografia.</p>
+<div class="api-row"><span class="api-method">GET</span><code>/v1/subjects/{subjectId}/enrollment/image</code><span>Escopo enrollment:image:read</span></div>
+<p>Retorna a fotografia normalizada com <code>Content-Type: image/jpeg</code>, <code>Content-Disposition: attachment</code> e <code>Cache-Control: no-store</code>. Requer permissão de leitura de imagem separada, que não deve ser concedida apenas para permitir verificação.</p>
+<div class="code-shell"><div class="code-header"><span class="code-label">Shell · consultar metadados</span><button type="button" class="code-copy" data-copy-code aria-label="Copiar exemplo de código">Copiar</button></div><pre><code class="language-bash">curl --request GET \
+  "$IFACEMATCH_API_ORIGIN/v1/subjects/driver-123/enrollment" \
+  --header "Authorization: Bearer $IFACEMATCH_API_KEY"</code></pre></div>
+<div class="code-shell"><div class="code-header"><span class="code-label">Shell · recuperar JPEG com permissão explícita</span><button type="button" class="code-copy" data-copy-code aria-label="Copiar exemplo de código">Copiar</button></div><pre><code class="language-bash">curl --fail --request GET \
+  "$IFACEMATCH_API_ORIGIN/v1/subjects/driver-123/enrollment/image" \
+  --header "Authorization: Bearer $IFACEMATCH_IMAGE_READ_KEY" \
+  --output reference.jpg</code></pre></div>
+<p>Use o mesmo <code>subjectId</code> em <code>POST /v1/verifications</code> para iniciar a verificação 1:1. A referência pode ser revogada pelo endpoint existente <code>DELETE /v1/subjects/{subjectId}/enrollment</code>, de acordo com as permissões da aplicação.</p>
+</section>
+
+<section class="doc-section" id="errors">
+<h2>4. Validações e erros</h2>
+<div class="table-wrap"><table><thead><tr><th>Status</th><th>Significado</th></tr></thead><tbody>
+<tr><td><code>400</code></td><td>Multipart inválido, campos incorretos, formato/tamanho/dimensões não suportados</td></tr>
+<tr><td><code>401 / 403</code></td><td>Chave inválida, escopo insuficiente, licença ou autorização ausente</td></tr>
+<tr><td><code>404</code></td><td>Cadastro ou imagem não encontrada nas rotas de consulta</td></tr>
+<tr><td><code>409</code></td><td>Já existe cadastro ativo para o <code>subjectId</code> nessa aplicação</td></tr>
+<tr><td><code>422</code></td><td>Nenhum rosto, múltiplos rostos ou qualidade insuficiente</td></tr>
+<tr><td><code>429</code></td><td>Cota mensal de cadastro excedida</td></tr>
+<tr><td><code>502</code></td><td>Falha ao extrair a referência biométrica</td></tr>
+<tr><td><code>503</code></td><td>Motor indisponível ou Secure Core incompatível</td></tr>
+</tbody></table></div>
+<div class="note warning"><strong>Contrato em homologação</strong><p>A política de qualidade (limiar nativo atual <code>0.25</code>), a compensação para falhas parciais, a atualização combinada de Server/Core e os testes de rollback ainda devem ser homologados. Não automatize este endpoint em produção até a publicação de uma release compatível.</p></div>
+</section>
+<section class="doc-section" id="machine-readable">
+<h2>5. Especificação para ferramentas e IAs</h2>
+<p>Consulte a <a href="/openapi-preview.json">especificação OpenAPI 3.1 de prévia</a>, com parâmetros, respostas e escopos. Ela é separada de <a href="/openapi.json">OpenAPI estável</a> justamente para impedir que SDKs tratem rotas ainda não distribuídas como disponíveis.</p>
+</section>
+<footer class="doc-footer">iFaceMatch · Documentação de integração Customer Hosted · <a href="/docs.md">Versão Markdown</a> · <a href="/llms.txt">Índice para IAs</a></footer>
