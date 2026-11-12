@@ -41,6 +41,12 @@ binary_name="$(basename "$binary")"
 }
 
 
+# O download por HTTP pode não preservar o bit executável do binário.
+chmod 0755 -- "$binary" || {
+    echo "[BLOCK] Cannot mark verified release binary as executable" >&2
+    exit 2
+}
+
 release_banner="$("$binary" -version 2>&1)" || {
     echo "[BLOCK] Cannot execute candidate documentation binary" >&2
     exit 2
