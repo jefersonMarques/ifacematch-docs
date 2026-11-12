@@ -59,6 +59,9 @@ Ubuntu Server 24.04 amd64 com systemd; PostgreSQL 16; DNS e certificado HTTPS; p
 
 ## 7. Releases
 
+0.1.11: pacote assinado publicado no GitHub Releases em 12/11/2026, 87 artefatos, SHA-256 4a44480bc5fe340ae1c26405284599560325807ac88c8c0daab8a645df10dc32. Apenas Console e sua proveniência mudaram em relação à 0.1.10. Não inclui cadastro de imagem, que permanece no Server PR #56 Draft. https://github.com/jefersonMarques/ifacematch/releases/tag/v0.1.11
+
+
 0.1.7: pacote Ubuntu 24.04 amd64 assinado, 69 arquivos, SHA-256 65358027c374a794f9a0201df229469da49e0b844a59486303e27df1a434b9a5. Somente Console mudou 0.1.3 -> 0.1.4; Server 0.1.6 preservado; piloto Rododata em 2026-11-05.
 0.1.6: pacote assinado, SHA-256 608197ec0bf762efc061c2dd6a9b047c293932c37a2b4df507a65915c9278c16. Server 0.1.6 instalado no piloto em 2026-11-04.
 Autoridade Ed25519: ifm_distribution_prod_v1. A existência de um pacote assinado não implica licença de redistribuição ou aprovação comercial.
