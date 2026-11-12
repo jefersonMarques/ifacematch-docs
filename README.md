@@ -78,7 +78,7 @@ A Release **não realiza deploy automaticamente**. O binário não é assinado c
 3. Criar `/opt/ifacematch-docs/bin` e instalar o binário verificado em `/opt/ifacematch-docs/bin/ifacematch-docs`.
 4. Copiar a unit de `deploy/systemd/ifacematch-docs.service` para `/etc/systemd/system/` e executar `systemctl daemon-reload`, `systemctl enable --now ifacematch-docs`.
 5. Ativar o vhost, validar `nginx -t` e recarregar o Nginx.
-6. Verificar `/healthz`, as seis páginas, a busca e os arquivos para IA.
+6. Verificar `/healthz`, as sete páginas (incluindo a prévia de envio de imagem), a busca, `/openapi.json`, `/openapi-preview.json` e os arquivos para IA.
 
 Para atualizar uma instalação existente, baixar o executável e `SHA256SUMS` da Release aprovada e executar `deploy/install-release.sh` como root. O script verifica o checksum, preserva o binário anterior e tenta rollback se o serviço ou o health check falhar. Não use este script para a instalação inicial.
 
