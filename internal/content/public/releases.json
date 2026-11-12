@@ -1,8 +1,28 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-11-06",
+  "updatedAt": "2026-11-12",
   "distributionAuthority": "ifm_distribution_prod_v1",
   "releases": [
+    {
+      "version": "0.1.11",
+      "date": "2026-11-12",
+      "platform": "ubuntu-24.04",
+      "architecture": "amd64",
+      "artifactCount": 87,
+      "sha256": "4a44480bc5fe340ae1c26405284599560325807ac88c8c0daab8a645df10dc32",
+      "availability": "public_signed_release",
+      "downloadUrl": "https://github.com/jefersonMarques/ifacematch/releases/tag/v0.1.11",
+      "components": {
+        "server": "preserved_from_0.1.10",
+        "console": "0.1.11",
+        "secureCore": "preserved_from_0.1.10"
+      },
+      "changes": [
+        "console/ifacematch-console",
+        "console/BUILD_PROVENANCE.txt"
+      ],
+      "notes": "Production pilot upgrade validated. Image upload endpoints from Server draft PR #56 are NOT included in this release."
+    },
     {
       "version": "0.1.7",
       "date": "2026-11-05",
