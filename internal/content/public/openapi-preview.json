@@ -1,0 +1,427 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "iFaceMatch — Face image enrollment (development preview; NOT commercial)",
+    "version": "0.1.8-preview",
+    "summary": "Draft contract from ifacematch-server PR #56, not supported by signed 0.1.11 production Server",
+    "description": "PROVISIONAL PREVIEW. This API exists only on the unmerged development branch feature/uploaded-face-enrollment-v1 (PR #56). It requires combined Server and Secure Core >=0.2.2 deployment. Do not call it against current 0.1.11 Customer Hosted installations. The stable OpenAPI contract is /openapi.json."
+  },
+  "servers": [
+    {
+      "url": "https://face.example.com",
+      "description": "Authorized future compatible Customer Hosted installation only"
+    }
+  ],
+  "x-ifacematch-release-status": "not-published",
+  "x-ifacematch-source": "https://github.com/jefersonMarques/ifacematch-server/pull/56",
+  "x-ifacematch-requires-secure-core": "0.2.2",
+  "tags": [
+    {
+      "name": "Face image enrollment — preview",
+      "description": "NOT available in signed 0.1.11 production"
+    }
+  ],
+  "security": [
+    {
+      "applicationBearer": []
+    }
+  ],
+  "paths": {
+    "/v1/enrollments/images": {
+      "post": {
+        "tags": [
+          "Face image enrollment — preview"
+        ],
+        "operationId": "previewCreateFaceImageEnrollment",
+        "summary": "Import a single-face JPEG/PNG as enrollment reference (DRAFT, NOT production)",
+        "description": "Requires enrollment:create. This does NOT perform liveness or identity confirmation. Exactly subjectId and one image form part are accepted.",
+        "x-ifacematch-availability": "development-only",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "subjectId": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128,
+                    "example": "driver-123"
+                  },
+                  "image": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "JPEG or PNG, <=4 MiB, 80..4096 pixels each dimension, <=8,000,000 total pixels"
+                  }
+                },
+                "required": [
+                  "subjectId",
+                  "image"
+                ]
+              },
+              "encoding": {
+                "image": {
+                  "contentType": "image/jpeg, image/png"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Facial reference stored, no liveness or identity confirmation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadedEnrollment"
+                },
+                "example": {
+                  "id": "chk_example123",
+                  "subjectId": "driver-123",
+                  "status": "active",
+                  "enrollmentMethod": "uploaded_image",
+                  "livenessPerformed": false,
+                  "referenceImageSha256": "EXAMPLE_NORMALIZED_JPEG_SHA256",
+                  "imageAvailable": true,
+                  "createdAt": "2026-11-09T18:00:00Z"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid multipart, field, image format, image size or dimensions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid application Bearer key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Insufficient scope or license",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Existing active enrollment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "No face, multiple faces, or insufficient quality",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Enrollment quota exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Native reference extraction failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Biometric engine or compatible Secure Core unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subjects/{subjectId}/enrollment": {
+      "get": {
+        "tags": [
+          "Face image enrollment — preview"
+        ],
+        "operationId": "previewGetEnrollmentMetadata",
+        "summary": "Read authorized active facial enrollment metadata (DRAFT)",
+        "x-ifacematch-availability": "development-only",
+        "description": "Requires checks:read. Does not return image bytes.",
+        "parameters": [
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "description": "Application-scoped subject identifier",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Active enrollment metadata",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadedEnrollment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid subject identifier",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Scope not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Active reference not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Enrollment backend unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/subjects/{subjectId}/enrollment/image": {
+      "get": {
+        "tags": [
+          "Face image enrollment — preview"
+        ],
+        "operationId": "previewDownloadEnrollmentImage",
+        "summary": "Download normalized JPEG with explicit image read permission (DRAFT)",
+        "x-ifacematch-availability": "development-only",
+        "description": "Requires enrollment:image:read. Response is an attachment and sets Cache-Control: no-store.",
+        "parameters": [
+          {
+            "name": "subjectId",
+            "in": "path",
+            "required": true,
+            "description": "Application-scoped subject identifier",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Normalized reference photograph",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "type": "string",
+                  "example": "no-store"
+                }
+              },
+              "Content-Disposition": {
+                "schema": {
+                  "type": "string",
+                  "example": "attachment; filename=\"reference.jpg\""
+                }
+              }
+            },
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid subject identifier",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Scope not allowed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Enrollment/image not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Enrollment backend unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "applicationBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Application key held by the integrator backend. Require route-specific scopes."
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      },
+      "UploadedEnrollment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "subjectId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          },
+          "enrollmentMethod": {
+            "type": "string",
+            "const": "uploaded_image"
+          },
+          "livenessPerformed": {
+            "type": "boolean",
+            "const": false
+          },
+          "referenceImageSha256": {
+            "type": "string",
+            "description": "SHA-256 of normalized JPEG, not necessarily original upload"
+          },
+          "imageAvailable": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "subjectId",
+          "status",
+          "enrollmentMethod",
+          "livenessPerformed",
+          "imageAvailable",
+          "createdAt"
+        ]
+      }
+    }
+  }
+}
