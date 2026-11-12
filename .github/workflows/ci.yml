@@ -27,6 +27,9 @@ jobs:
       - name: Generate templ components
         run: go run github.com/a-h/templ/cmd/templ@v0.3.1020 generate
 
+      - name: Validate deployment script syntax
+        run: bash -n deploy/install-release.sh
+
       - name: Run unit and HTTP tests
         run: go test -mod=mod -race ./...
 
