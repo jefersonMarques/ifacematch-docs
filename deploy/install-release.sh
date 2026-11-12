@@ -65,18 +65,25 @@ candidate="${destination}.candidate"
 backup_dir="/opt/ifacematch-docs/backups"
 mkdir -p -m 0700 "$backup_dir"
 backup="${backup_dir}/$(date -u +%Y%m%dT%H%M%SZ)-ifacematch-docs"
+[[ ! -e "$backup" ]] || {
+    echo "[BLOCK] Backup target already exists; refusing overwrite: $backup" >&2
+    exit 2
+}
 
 rollback() {
     local status="${1:-1}"
     trap - ERR
 
     if [[ -f "$backup" ]]; then
-        if install -m 0755 "$backup" "$destination" && \
+        local restore_candidate="${destination}.rollback-candidate"
+        if install -m 0755 "$backup" "$restore_candidate" && \
+            mv -f -- "$restore_candidate" "$destination" && \
             systemctl restart ifacematch-docs.service; then
             echo "[ROLLBACK] Previous documentation binary restored: $backup" >&2
         else
             echo "[CRITICAL] Automatic rollback failed; recover from: $backup" >&2
         fi
+        rm -f -- "$restore_candidate"
     fi
 
     rm -f -- "$candidate"
