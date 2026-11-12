@@ -27,6 +27,7 @@ func TestDocumentationPages(t *testing.T) {
 	paths := []string{
 		"/",
 		"/api",
+		"/upload-image",
 		"/sdk",
 		"/installation",
 		"/releases",
@@ -93,7 +94,7 @@ func TestLegacyPageRedirects(t *testing.T) {
 
 func TestCanonicalTrailingSlashRedirects(t *testing.T) {
 	handler := NewHandler()
-	for _, pagePath := range []string{"/api", "/sdk", "/installation", "/releases", "/upgrade"} {
+	for _, pagePath := range []string{"/api", "/upload-image", "/sdk", "/installation", "/releases", "/upgrade"} {
 		response := request(t, handler, http.MethodGet, pagePath+"/", nil)
 		if response.Code != http.StatusMovedPermanently {
 			t.Errorf("%s/ returned %d instead of 301", pagePath, response.Code)
@@ -111,7 +112,7 @@ func TestDocumentationLinksUseCanonicalPaths(t *testing.T) {
 		"/docs-install.html", "/releases.html", "/upgrade-guide.html",
 	}
 
-	for _, pagePath := range []string{"/", "/api", "/sdk", "/installation", "/releases", "/upgrade"} {
+	for _, pagePath := range []string{"/", "/api", "/upload-image", "/sdk", "/installation", "/releases", "/upgrade"} {
 		response := request(t, handler, http.MethodGet, pagePath, nil)
 		body := response.Body.String()
 		for _, legacyPath := range legacyPaths {
@@ -157,6 +158,7 @@ func TestStaticOpenAPIAndAIAssets(t *testing.T) {
 	handler := NewHandler()
 	for _, assetPath := range []string{
 		"/openapi.json",
+		"/openapi-preview.json",
 		"/releases.json",
 		"/llms.txt",
 		"/llms-full.txt",
@@ -186,6 +188,58 @@ func TestStaticOpenAPIAndAIAssets(t *testing.T) {
 	}
 }
 
+func TestFaceUploadPreviewNotAdvertisedAsStable(t *testing.T) {
+    handler := NewHandler()
+
+    previewPage := request(t, handler, http.MethodGet, "/upload-image", nil)
+    if previewPage.Code != http.StatusOK {
+        t.Fatalf("preview page status: %d", previewPage.Code)
+    }
+    for _, expected := range []string{
+        "/v1/enrollments/images",
+        "multipart/form-data",
+        "0.1.11",
+        "não",
+        "/openapi-preview.json",
+    } {
+        if !strings.Contains(previewPage.Body.String(), expected) {
+            t.Errorf("upload preview page missing %q", expected)
+        }
+    }
+
+    stable := request(t, handler, http.MethodGet, "/openapi.json", nil)
+    var stableContract struct {
+        Paths map[string]json.RawMessage `json:"paths"`
+    }
+    if err := json.Unmarshal(stable.Body.Bytes(), &stableContract); err != nil {
+        t.Fatal(err)
+    }
+    if _, exists := stableContract.Paths["/v1/enrollments/images"]; exists {
+        t.Fatal("unpublished upload endpoint must not appear in stable OpenAPI")
+    }
+
+    preview := request(t, handler, http.MethodGet, "/openapi-preview.json", nil)
+    var draftContract struct {
+        OpenAPI string `json:"openapi"`
+        Paths map[string]json.RawMessage `json:"paths"`
+    }
+    if err := json.Unmarshal(preview.Body.Bytes(), &draftContract); err != nil {
+        t.Fatal(err)
+    }
+    if draftContract.OpenAPI != "3.1.0" || len(draftContract.Paths) != 3 {
+        t.Fatalf("invalid preview OpenAPI: version=%s paths=%d", draftContract.OpenAPI, len(draftContract.Paths))
+    }
+    for _, endpoint := range []string{
+        "/v1/enrollments/images",
+        "/v1/subjects/{subjectId}/enrollment",
+        "/v1/subjects/{subjectId}/enrollment/image",
+    } {
+        if _, exists := draftContract.Paths[endpoint]; !exists {
+            t.Errorf("preview missing endpoint: %s", endpoint)
+        }
+    }
+}
+
 func TestSitemapUsesCanonicalPaths(t *testing.T) {
 	response := request(t, NewHandler(), http.MethodGet, "/sitemap.xml", nil)
 	if response.Code != http.StatusOK {
@@ -193,7 +247,7 @@ func TestSitemapUsesCanonicalPaths(t *testing.T) {
 	}
 
 	sitemap := response.Body.String()
-	for _, pagePath := range []string{"/", "/api", "/sdk", "/installation", "/releases", "/upgrade"} {
+	for _, pagePath := range []string{"/", "/api", "/upload-image", "/sdk", "/installation", "/releases", "/upgrade"} {
 		expected := "<loc>https://docs.ifacematch.com" + pagePath + "</loc>"
 		if !strings.Contains(sitemap, expected) {
 			t.Errorf("sitemap missing %q", expected)
